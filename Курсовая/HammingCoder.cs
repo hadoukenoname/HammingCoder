@@ -190,6 +190,35 @@ namespace Курсовая
             return result;
         }
 
+        public static int[] MakeErros(int probability, int[] encoded)
+        {
+            Random rnd = new Random();
+            for (int i = 0; i < encoded.Length; i++)
+            {
+                if (probability >= rnd.Next(0, 101))
+                    encoded[i] = 1 - encoded[i];
+            }
+            return encoded;
+        }
+
+        public static List<int> Missmatch(int[] received, int[] encoded)
+        {
+            List<int> result = new List<int>();
+
+            if (received.Length != encoded.Length)
+                return result;
+
+            else
+            {
+                for (int i = 0; i < received.Length; i++)
+                {
+                    if (received[i] != encoded[i])
+                        result.Add(i);
+                }
+            }
+            return result;
+        }
+
         public static int[,] GetG(int index)
         {
             return index == 0 ? _G : _G1;
