@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 
@@ -16,8 +17,92 @@ namespace Курсовая
         public Form1()
         {
             InitializeComponent();
+            LoadFilesAndFolders("D:/");
+           
         }
-      
+
+        private void LoadFilesAndFolders(string path)
+        {
+            try
+            {
+                // Очистить TreeView перед загрузкой новых данных
+                treeView1.Nodes.Clear();
+
+                // Создать корневой узел для указанной директории
+                TreeNode rootNode = new TreeNode(path);
+                treeView1.Nodes.Add(rootNode);
+
+                // Загрузить подкаталоги и файлы
+                LoadDirectory(rootNode, path);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при загрузке файлов: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void LoadDirectory(TreeNode parentNode, string path)
+        {
+            try
+            {
+                // Получить все подкаталоги
+                string[] directories = Directory.GetDirectories(path);
+                foreach (string directory in directories)
+                {
+                    // Создать узел для каждой папки
+                    TreeNode dirNode = new TreeNode(new DirectoryInfo(directory).Name);
+                    parentNode.Nodes.Add(dirNode);
+
+                    // Рекурсивно загрузить содержимое подкаталога
+                    LoadDirectory(dirNode, directory);
+                }
+
+                // Получить все файлы в текущей директории
+                string[] files = Directory.GetFiles(path);
+                foreach (string file in files)
+                {
+                    // Создать узел для каждого файла
+                    TreeNode fileNode = new TreeNode(new FileInfo(file).Name);
+                    parentNode.Nodes.Add(fileNode);
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                parentNode.Nodes.Add("Доступ запрещен");
+            }
+            catch (Exception ex)
+            {
+                parentNode.Nodes.Add($"Ошибка: {ex.Message}");
+            }
+        }
+
+
+
+        private string GetFullPath(TreeNode node)
+        {
+            // Используем StringBuilder для сборки пути
+            StringBuilder pathBuilder = new StringBuilder();
+
+            // Проходим по всем родительским узлам
+            while (node != null)
+            {
+                // Добавляем имя узла к пути
+                pathBuilder.Insert(0, node.Text);
+
+                // Если это не корневой узел, добавляем одинарный слеш
+                if (node.Parent != null)
+                {
+                    pathBuilder.Insert(0, "/");
+                }
+
+                // Переходим к родительскому узлу
+                node = node.Parent;
+            }
+
+            // Преобразуем путь: заменяем обратные слеши на обычные слеши
+            return pathBuilder.ToString().Replace("//", "/"); ;
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
             int expectedLength = Encode74Button.Checked ? 4 : 11;
@@ -30,7 +115,7 @@ namespace Курсовая
                 ShowArray(result, EncodedMessageText);
                 ShowArray(result, ReceivedMessageText);
 
-                PrintStatus("Encoded");
+                PrintStatus("Encoded", StatusRichTextBox);
             }                
         }
         private void button2_Click(object sender, EventArgs e)
@@ -41,15 +126,15 @@ namespace Курсовая
             switch (mistakes.Count)
             {
                 case 0:
-                    PrintStatus("NoMistakes");                    
+                    PrintStatus("NoMistakes", StatusRichTextBox);                    
                     break;
 
                 case 1:
-                    PrintStatus("OneMistake");                    
+                    PrintStatus("OneMistake", StatusRichTextBox);                    
                     break;
 
                 default:
-                    PrintStatus("Unable");
+                    PrintStatus("Unable", StatusRichTextBox);
                     break;                   
             }
 
@@ -132,7 +217,7 @@ namespace Курсовая
             return isCorrect;
         }
 
-        private void PrintStatus(string status)
+        private void PrintStatus(string status, RichTextBox StatusRichTextBox)
         {
             switch(status)
             {
@@ -166,14 +251,71 @@ namespace Курсовая
             }
         }
 
-        private void tabControl1_Click(object sender, EventArgs e)
+        private void PrintMatrixAsBlocks(int[,] matrix, TextBox textbox)
         {
-            if (EncodedMessageText.Text.Length == 0)
-                return;
-            if (EncodedMessageText.Text.Length == 7)
-                ShowMatrix(HammingCoder.GetH(0), HMatrixText);
+            string result = "";
+            
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                for (int j = 0; j < matrix.GetLength(1); j++)
+                {
+                    result += matrix[i, j];
+                }
+
+                result += '\t';
+            }
+
+            textbox.Text = result;
+        }
+
+        private void FileButton74_CheckedChanged(object sender, EventArgs e)
+        {
+            EncodeFromFileButton.Enabled = true;
+        }
+
+        private void FileButton1511_CheckedChanged(object sender, EventArgs e)
+        {
+            EncodeFromFileButton.Enabled = true;
+        }
+
+        private void EncodeFromFileButton_Click(object sender, EventArgs e)
+        {
+            HammingCoder.HammingCodeType codetype = FileButton74.Checked ? HammingCoder.HammingCodeType.Code7_4 : HammingCoder.HammingCodeType.Code15_11;
+            int[,] result = HammingCoder.EncodeText(FileMessageTextBox.Text, codetype);
+            HammingCoder.MakeErrors((int)numericUpDown2.Value, result);
+
+            PrintMatrixAsBlocks(result, ReceivedFromFileTextBox);
+            DecodeFromFileButton.Enabled = true;
+        }
+
+        private void ReadFromFileButton_Click(object sender, EventArgs e)
+        {
+            if (treeView1.SelectedNode == null)
+            {
+                MessageBox.Show("Файл не выбран");
+            }
             else
-                ShowMatrix(HammingCoder.GetH(1), HMatrixText);
+            {               
+                FileMessageTextBox.Text = File.ReadAllText(GetFullPath(treeView1.SelectedNode));
+            }                
+        }
+
+        private void DecodeFromFileButton_Click(object sender, EventArgs e)
+        {
+            HammingCoder.HammingCodeType codetype = FileButton74.Checked ? HammingCoder.HammingCodeType.Code7_4 : HammingCoder.HammingCodeType.Code15_11;
+            int[,] received = HammingCoder.ConvertTextToMatrix(ReceivedFromFileTextBox.Text);
+            int[,] decoded = HammingCoder.DecodeParsed(received, codetype);
+
+            PrintMatrixAsBlocks(decoded, DecodedFromFileTextBox);
+            RestoreFromFileButton.Enabled = true;            
+        }
+
+        private void RestoreFromFileButton_Click(object sender, EventArgs e)
+        {
+            int[,] decoded = HammingCoder.ConvertTextToMatrix(DecodedFromFileTextBox.Text);
+            string result = HammingCoder.ConvertBinaryArrayToText(HammingCoder.MatrixToBinary(decoded));
+
+            RestoredMessageTextBox.Text = result;
         }
     }
 }

@@ -36,7 +36,7 @@
     <StartupObject />
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>732dbb4ddb64ab6095efea20bad086ec.ico</ApplicationIcon>
+    <ApplicationIcon>j4sb5KC8TyM.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -66,13 +66,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -88,6 +83,13 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="732dbb4ddb64ab6095efea20bad086ec.ico" />
+    <Content Include="j4sb5KC8TyM.ico" />
+    <None Include="Resources\71c1a9f190b19dcaf1264b40c15216341.png" />
+    <None Include="Resources\71c1a9f190b19dcaf1264b40c1521634.png" />
+    <None Include="Resources\37bd90dcac57a5775b8a63f7a16cccef1.jpg" />
+    <None Include="Resources\37bd90dcac57a5775b8a63f7a16cccef.jpg" />
+    <None Include="Resources\photo_2025-04-04_21-37-51.jpg" />
+    <None Include="Properties\png-clipart-rectangle-strip-angle-religion.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
